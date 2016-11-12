@@ -5,12 +5,14 @@ var measurementTypes = {};
 var siteMeasurementsObj = {};
 var measurementsUnitsObj = {};
 
+var sites = ["RG01","RG02"];
+
+var sitesData= [];
+
 var Trimble = {};
 Trimble.baseUrl = "https://goldenberyl.trimbleunity.com/unity";
 Trimble.token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE0Nzg5MzEwNjUsImV4cCI6MTUxMDQ2NzA3NywiYXVkIjoiIiwic3ViIjoiIiwidXNlck5hbWUiOiJsb2tlc2giLCJ0ZW5hbnQiOiJkZXYxNjIifQ.7yblAQPT8vBP2oARNR_gDbjutBC1hJrewTHUvRSHtwY";
 
-
-var siteName = "RG01";//"T03-005";
 var lineWidth = "";
 var graphWidth = "";
 var historianUrl = "https://telogdhs.com/Telog/Map/qvwxdpFJTecz7XtSBKZNZL3oyhZUdVeuaswqtpdk070=/rest/services/Telog/FeatureServer/0/query?where=siteNameFilter(<sitenames>)&f=json";
@@ -20,26 +22,28 @@ var showToolTip = "";
 
 $(document).ready(function () {
     loadMeasurementTypes();
-    var today = new Date();
-    //add a day to the date
-    today.setDate(today.getDate() - 1);
 
-    var defaultStartDate = new Date("2016-07-28T06:00:11.980759")
-    var endDate = new Date("2016-07-29T06:58:11.980759")
-    viewMeasurementGraph(siteName, lineWidth, graphWidth,historianUrl, defaultStartDate, endDate, graphHeight, showToolTip);
+    loadSiteDataFromTelog();
 });
 
+function loadSiteDataFromTelog(){
+    var defaultStartDate = new Date("2016-07-28T06:00:11.980759");
+    var endDate = new Date("2016-07-29T06:58:11.980759");
+    for(var i=0;i<sites.length;i++){
+       var data = getSitesDataFromTelog(sites[i], lineWidth, graphWidth,historianUrl, defaultStartDate, endDate, graphHeight, showToolTip);
+        addSitesData(sites[i],data);
+    }
+}
 
 
-function viewMeasurementGraph(siteName, linewidth, graphWidth, historianUrl, startDateTime, endDateTime, graphHeight, showToolTip) {
+
+function getSitesDataFromTelog(siteName, linewidth, graphWidth, historianUrl, startDateTime, endDateTime, graphHeight, showToolTip) {
 
     historianUrl = historianUrl.replace("<sitenames>", siteName);
-
+    var chartData = "";
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-
-
             var measurementtypes = {};
             for (var measurementTypeIndex in measurementTypes) {
                 var measurementType = measurementTypes[measurementTypeIndex];
@@ -68,8 +72,6 @@ function viewMeasurementGraph(siteName, linewidth, graphWidth, historianUrl, sta
                     } else if (Object.keys(measurementtypes).length == 0) {
                         measurementids.push(measurementId);
                     }
-
-
                     if (!siteMeasurementsObj[measurementId]) {
                         measurement = {
                             siteid: siteid,
@@ -83,23 +85,21 @@ function viewMeasurementGraph(siteName, linewidth, graphWidth, historianUrl, sta
                     if (!measurementsUnitsObj[measurementName]) {
                         measurementsUnitsObj[measurementName] = measurementUnits;
                     }
-
                 }
-
             }
             // TODO Remove the hardcoded start date and end date
-            buildMeasurementGraph(new Date(startDateTime), new Date(endDateTime), measurementids, linewidth, graphWidth, graphHeight, showToolTip);
-
+            chartData = buildMeasurementGraph(new Date(startDateTime), new Date(endDateTime), measurementids, linewidth, graphWidth, graphHeight, showToolTip);
         }
     };
 
     // Make request to get Site measurements
-    xmlhttp.open("GET", Trimble.baseUrl + '/proxy?url=' + historianUrl + '&token=' + Trimble.token, true);
+    xmlhttp.open("GET", Trimble.baseUrl + '/proxy?url=' + historianUrl + '&token=' + Trimble.token, false);
     xmlhttp.send();
+    return chartData;
 }
 
 function buildMeasurementGraph(startDate, endDate, selectedMeasurementIds, linewidth, graphWidth, graphHeight, showTooltip) {
-
+    var chartData = "";
     var startDateTimeTimeStamp = Date.parse(startDate);
     var endDateTimeTimeStamp = Date.parse(endDate);
     var measurementParamValue = '';
@@ -129,17 +129,15 @@ function buildMeasurementGraph(startDate, endDate, selectedMeasurementIds, linew
         var url = Trimble.baseUrl + '/proxy/restservice/1';
         xmlhttp.onreadystatechange = function () {
             if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                var chartData = JSON.parse(xmlhttp.responseText);
-
+                chartData = JSON.parse(xmlhttp.responseText);
             }
-
         };
 
-        xmlhttp.open("POST", url + "?token=" + Trimble.token, true);
+        xmlhttp.open("POST", url + "?token=" + Trimble.token, false);
         xmlhttp.setRequestHeader("Content-Type", "application/json");
         xmlhttp.send(restRequestJson);
-
     }
+    return chartData;
 }
 
 function loadMeasurementTypes() {
@@ -153,3 +151,20 @@ function loadMeasurementTypes() {
     xmlhttpRequest.open("GET", Trimble.baseUrl + '/measurementtypes?token=' + Trimble.token, true);
     xmlhttpRequest.send();
 }
+
+function addSitesData(id, data){
+    var site = {};
+    site.id = id;
+    site.data = data == undefined ? null : data[0];
+    sitesData.push(site);
+}
+
+function getSitesData(id){
+    for(var i=0; i<sites.length;i++){
+        if(sites[i].id == id){
+            return sites[i].data;
+        }
+    }
+    return null;
+}
+
