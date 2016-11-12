@@ -5,6 +5,7 @@ var measurementTypes = {};
 var siteMeasurementsObj = {};
 var measurementsUnitsObj = {};
 
+var rainGuages = ["RG01","RG02"];
 var sites = ["RG01","RG02"];
 
 var sitesData= [];
@@ -19,23 +20,20 @@ var historianUrl = "https://telogdhs.com/Telog/Map/qvwxdpFJTecz7XtSBKZNZL3oyhZUd
 var graphHeight = "";
 var showToolTip = "";
 
-
 $(document).ready(function () {
     loadMeasurementTypes();
-
     loadSiteDataFromTelog();
+    drawRainFallChart();
 });
 
 function loadSiteDataFromTelog(){
-    var defaultStartDate = new Date("2016-07-28T06:00:11.980759");
-    var endDate = new Date("2016-07-29T06:58:11.980759");
+    var defaultStartDate = new Date("2016-07-29T04:00:00");
+    var endDate = new Date("2016-07-29T06:00:00.00");
     for(var i=0;i<sites.length;i++){
        var data = getSitesDataFromTelog(sites[i], lineWidth, graphWidth,historianUrl, defaultStartDate, endDate, graphHeight, showToolTip);
         addSitesData(sites[i],data);
     }
 }
-
-
 
 function getSitesDataFromTelog(siteName, linewidth, graphWidth, historianUrl, startDateTime, endDateTime, graphHeight, showToolTip) {
 
@@ -160,11 +158,71 @@ function addSitesData(id, data){
 }
 
 function getSitesData(id){
-    for(var i=0; i<sites.length;i++){
-        if(sites[i].id == id){
-            return sites[i].data;
+    for(var i=0; i<sitesData.length;i++){
+        if(sitesData[i].id == id){
+            return sitesData[i].data;
         }
     }
     return null;
+}
+
+function getRainFallDataAndDate(){
+    var rainFallData = {};
+    var dates = [];
+    var seriesRainFallData = [];
+    for(var i=0;i < rainGuages.length; i++){
+        var data = getSitesData(rainGuages[i]).Values;
+        var seriesData = {};
+        seriesData.data = [];
+        seriesData.name = rainGuages[i];
+        for(var j=0; j< data.length; j++){
+            if(i == 0){
+                var time = new Date(data[j].Time);
+                dates.push(time.getHours() + ":" + time.getMinutes());
+            }
+            seriesData.data.push(data[j].Value);
+        }
+        seriesRainFallData.push(seriesData)
+    }
+    rainFallData.dates = dates;
+    rainFallData.data = seriesRainFallData;
+    return rainFallData;
+}
+
+function drawRainFallChart(){
+    var rainFallData = getRainFallDataAndDate();
+    Highcharts.chart('container', {
+        title: {
+            text: 'RAIN FALL CHART',
+            x: -20 //center
+        },
+        subtitle: {
+            text: 'Date: 17-Nov-2016',
+            x: -20
+        },
+        xAxis: {
+            categories: rainFallData.dates
+        },
+        yAxis: {
+            title: {
+                text: 'Rainfall (ft)'
+            },
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }]
+        },
+        tooltip: {
+            valueSuffix: '°C'
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            borderWidth: 0
+        },
+        series: rainFallData.data
+    });
 }
 
