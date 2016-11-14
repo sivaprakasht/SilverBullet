@@ -5,8 +5,9 @@ var measurementTypes = {};
 var siteMeasurementsObj = {};
 var measurementsUnitsObj = {};
 
-var rainGuages = ["RG01","RG02"];
-var sites = ["RG01","RG02"];
+var rainGauges = ["RG01","RG02","RG02"];
+var flowMeters = ["T03-005"];
+var sites = ["RG01","RG02","RG02","T03-005"];
 
 var sitesData= [];
 
@@ -23,7 +24,7 @@ var showToolTip = "";
 $(document).ready(function () {
     loadMeasurementTypes();
     loadSiteDataFromTelog();
-    drawRainFallChart();
+    renderRainGaugeCharts();
 });
 
 function loadSiteDataFromTelog(){
@@ -36,7 +37,6 @@ function loadSiteDataFromTelog(){
 }
 
 function getSitesDataFromTelog(siteName, linewidth, graphWidth, historianUrl, startDateTime, endDateTime, graphHeight, showToolTip) {
-
     historianUrl = historianUrl.replace("<sitenames>", siteName);
     var chartData = "";
     var xmlhttp = new XMLHttpRequest();
@@ -89,7 +89,6 @@ function getSitesDataFromTelog(siteName, linewidth, graphWidth, historianUrl, st
             chartData = buildMeasurementGraph(new Date(startDateTime), new Date(endDateTime), measurementids, linewidth, graphWidth, graphHeight, showToolTip);
         }
     };
-
     // Make request to get Site measurements
     xmlhttp.open("GET", Trimble.baseUrl + '/proxy?url=' + historianUrl + '&token=' + Trimble.token, false);
     xmlhttp.send();
@@ -153,7 +152,9 @@ function loadMeasurementTypes() {
 function addSitesData(id, data){
     var site = {};
     site.id = id;
-    site.data = data == undefined ? null : data[0];
+    if(data != undefined) {
+        site.data =  data;
+    }
     sitesData.push(site);
 }
 
@@ -170,11 +171,11 @@ function getRainFallDataAndDate(){
     var rainFallData = {};
     var dates = [];
     var seriesRainFallData = [];
-    for(var i=0;i < rainGuages.length; i++){
-        var data = getSitesData(rainGuages[i]).Values;
+    for(var i=0; i < rainGauges.length; i++){
+        var data = getSitesData(rainGauges[i])[0].Values;
         var seriesData = {};
         seriesData.data = [];
-        seriesData.name = rainGuages[i];
+        seriesData.name = rainGauges[i];
         for(var j=0; j< data.length; j++){
             if(i == 0){
                 var time = new Date(data[j].Time);
@@ -189,9 +190,39 @@ function getRainFallDataAndDate(){
     return rainFallData;
 }
 
-function drawRainFallChart(){
+function getRainFallDataAndDate2(){
+    var rainFallData = [];
+    var seriesData = {};
+    for(var i=0; i < rainGauges.length; i++){
+        seriesData.id = rainGauges[i];
+        seriesData.data = [];
+        var data = getSitesData(rainGauges[i])[0].Values;
+        for(var j=0; j< data.length; j++){
+            var rainFall = [];
+            var time = new Date(data[j].Time);
+            rainFall.push(time.getHours() + ":" + time.getMinutes());
+            rainFall.push(data[j].Value);
+            seriesData.data.push(rainFall);
+        }
+        rainFallData.push(seriesData);
+    }
+    return rainFallData;
+}
+
+function renderRainGaugeCharts(){
     var rainFallData = getRainFallDataAndDate();
-    Highcharts.chart('container', {
+    for(var i = 0;i < rainGauges.length;i++){
+        var currentRainFallData = [];
+        currentRainFallData.push(rainFallData.data[i]);
+        drawRainFallChart("rainGauge"+i,currentRainFallData, rainFallData.dates);
+    }
+}
+
+function drawRainFallChart(container, data, dates){
+
+    clearContainer(container);
+
+    Highcharts.chart(container, {
         title: {
             text: 'RAIN FALL CHART',
             x: -20 //center
@@ -201,7 +232,7 @@ function drawRainFallChart(){
             x: -20
         },
         xAxis: {
-            categories: rainFallData.dates
+            categories: dates
         },
         yAxis: {
             title: {
@@ -222,7 +253,12 @@ function drawRainFallChart(){
             verticalAlign: 'middle',
             borderWidth: 0
         },
-        series: rainFallData.data
+        series: data
     });
 }
+
+function clearContainer(container){
+    document.getElementById(container).innerHTML = "";
+}
+
 
