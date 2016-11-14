@@ -9,8 +9,11 @@
     <meta http-equiv="Access-Control-Allow-Origin" content="*"/>
 
     <link rel="stylesheet" type="text/css" href="css/measurementGraph.css">
+
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
 
     <script src="js/lib/jquery/jquery.min.js" type="text/javascript"></script>
     <script src="js/measurementGraph.js" type="text/javascript"></script>
@@ -18,12 +21,39 @@
     <title>Silver Bullet</title>
 </head>
 <body>
-<div id="rainGaugeContainer">
-    <div id="rainGauge0" style="width: 30%; height: 400px;"></div>
+<table id="chartTable">
+    <tr>
+        <th>
+            <div id="rainGauge0" style="width: 100%; height: 400px;"></div>
+        </th>
+        <th>
+            <div id="rainGauge1" style="width: 100%; height: 400px;"></div>
+        </th>
+        <th>
+            <div id="rainGauge2" style="width: 100%; height: 400px;"></div>
+        </th>
+    </tr>
+    <tr>
+        <th>
+            <div style="width: 600px; height: 400px; margin: 0 auto">
+                <div id="container-speed0" style="width: 300px; height: 200px; float: left"></div>
+            </div>
+        </th>
+        <th>
+            <div style="width: 600px; height: 400px; margin: 0 auto">
+                <div id="container-speed1" style="width: 300px; height: 200px; float: left"></div>
+            </div>
+        </th>
+        <th>
+            <div style="width: 600px; height: 400px; margin: 0 auto">
+                <div id="container-speed2" style="width: 300px; height: 200px; float: left"></div>
+            </div>
+        </th>
+    </tr>
+</table>
 
-    <div id="rainGauge1" style="width: 30%; height: 400px;"></div>
 
-    <div id="rainGauge2" style="width: 30%; height: 400px;"></div>
-</div>
+
+
 </body>
 </html>

@@ -6,7 +6,7 @@ var siteMeasurementsObj = {};
 var measurementsUnitsObj = {};
 
 var rainGauges = ["RG01","RG02","RG02"];
-var flowMeters = ["T03-005"];
+var inFlowMeters = ["T03-005","T03-005","T03-005"];
 var sites = ["RG01","RG02","RG02","T03-005"];
 
 var sitesData= [];
@@ -25,7 +25,10 @@ $(document).ready(function () {
     loadMeasurementTypes();
     loadSiteDataFromTelog();
     renderRainGaugeCharts();
+    renderInflowCharts();
 });
+
+
 
 function loadSiteDataFromTelog(){
     var defaultStartDate = new Date("2016-07-29T04:00:00");
@@ -190,24 +193,7 @@ function getRainFallDataAndDate(){
     return rainFallData;
 }
 
-function getRainFallDataAndDate2(){
-    var rainFallData = [];
-    var seriesData = {};
-    for(var i=0; i < rainGauges.length; i++){
-        seriesData.id = rainGauges[i];
-        seriesData.data = [];
-        var data = getSitesData(rainGauges[i])[0].Values;
-        for(var j=0; j< data.length; j++){
-            var rainFall = [];
-            var time = new Date(data[j].Time);
-            rainFall.push(time.getHours() + ":" + time.getMinutes());
-            rainFall.push(data[j].Value);
-            seriesData.data.push(rainFall);
-        }
-        rainFallData.push(seriesData);
-    }
-    return rainFallData;
-}
+
 
 function renderRainGaugeCharts(){
     var rainFallData = getRainFallDataAndDate();
@@ -224,7 +210,7 @@ function drawRainFallChart(container, data, dates){
 
     Highcharts.chart(container, {
         title: {
-            text: 'RAIN FALL CHART',
+            text: 'AVADI',
             x: -20 //center
         },
         subtitle: {
@@ -261,4 +247,149 @@ function clearContainer(container){
     document.getElementById(container).innerHTML = "";
 }
 
+function renderInflowCharts(){
+    for(var i=0;i<inFlowMeters.length;i++){
+        drawInflowChart(i,null);
+    }
+}
 
+function drawInflowChart(containerIndex, data){
+
+    var gaugeOptions = {
+
+        chart: {
+            type: 'solidgauge'
+        },
+
+        title: null,
+
+        pane: {
+            center: ['50%', '85%'],
+            size: '140%',
+            startAngle: -90,
+            endAngle: 90,
+            background: {
+                backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+                innerRadius: '60%',
+                outerRadius: '100%',
+                shape: 'arc'
+            }
+        },
+
+        tooltip: {
+            enabled: false
+        },
+
+        // the value axis
+        yAxis: {
+            stops: [
+                [0.1, '#55BF3B'], // green
+                [0.5, '#DDDF0D'], // yellow
+                [0.9, '#DF5353'] // red
+            ],
+            lineWidth: 0,
+            minorTickInterval: null,
+            tickAmount: 2,
+            title: {
+                y: -70
+            },
+            labels: {
+                y: 16
+            }
+        },
+
+        plotOptions: {
+            solidgauge: {
+                dataLabels: {
+                    y: 5,
+                    borderWidth: 0,
+                    useHTML: true
+                }
+            }
+        }
+    };
+
+    // The speed gauge
+    var chartSpeed = Highcharts.chart('container-speed'+containerIndex, Highcharts.merge(gaugeOptions, {
+        yAxis: {
+            min: 0,
+            max: 100,
+            title: {
+                text: 'Flowmeter 1'
+            }
+        },
+
+        credits: {
+            enabled: false
+        },
+
+        series: [{
+            name: 'Flowmeter1',
+            data: [80],
+            dataLabels: {
+                format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
+                '<span style="font-size:12px;color:silver">cubic feet/sec</span></div>'
+            },
+            tooltip: {
+                valueSuffix: ' cfs'
+            }
+        }]
+
+    }));
+
+
+
+    // Bring life to the dials
+    setInterval(function () {
+        // Speed
+        var point,
+            newVal,
+            inc;
+
+        if (chartSpeed) {
+            point = chartSpeed.series[0].points[0];
+            inc = Math.round((Math.random() - 0.5) * 100);
+            newVal = point.y + inc;
+
+            if (newVal < 0 || newVal > 100) {
+                newVal = point.y - inc;
+            }
+
+            point.update(newVal);
+        }
+
+        // RPM
+        if (chartRpm) {
+            point = chartRpm.series[0].points[0];
+            inc = Math.random() - 0.5;
+            newVal = point.y + inc;
+
+            if (newVal < 0 || newVal > 5) {
+                newVal = point.y - inc;
+            }
+
+            point.update(newVal);
+        }
+    }, 2000);
+
+}
+
+/*function getRainFallDataAndDate2(){
+ var rainFallData = [];
+ var seriesData = {};
+ for(var i=0; i < rainGauges.length; i++){
+ seriesData.id = rainGauges[i];
+ seriesData.data = [];
+ var data = getSitesData(rainGauges[i])[0].Values;
+ for(var j=0; j< data.length; j++){
+ var rainFall = [];
+ var time = new Date(data[j].Time);
+ rainFall.push(time.getHours() + ":" + time.getMinutes());
+ rainFall.push(data[j].Value);
+ seriesData.data.push(rainFall);
+ }
+ rainFallData.push(seriesData);
+ }
+ return rainFallData;
+ }*/

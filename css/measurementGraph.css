@@ -1,6 +1,13 @@
 #rainGauge0, #rainGauge1, #rainGauge2 {
 
-    float: left;
 }
 
-                            }
+
+#chartTable {
+    width:100%;
+    height:100%;
+}
+
+th {
+    width:33%;
+}
