@@ -4,7 +4,7 @@
 var measurementTypes = {};
 var siteMeasurementsObj = {};
 var measurementsUnitsObj = {};
-
+var rainGaugesSites = ["AVADI", "TIRUVALLUR", "SRIPERUMBUDUR", "RAMAPURAM", "ADAYAR"];
 var rainGauges = ["RG01","RG02","RG02","RG01","RG02"];
 var inFlowMeters = ["T03-005","T03-005","T03-005","T03-005"];
 var sites = ["RG01","RG02","RG02","T03-005"];
@@ -196,23 +196,25 @@ function renderRainGaugeCharts(){
     for(var i = 0;i < rainGauges.length;i++){
         var currentRainFallData = [];
         currentRainFallData.push(rainFallData.data[i]);
-        drawRainFallChart("rainGauge"+i,currentRainFallData, rainFallData.dates);
+        drawRainFallChart(i,currentRainFallData, rainFallData.dates);
     }
 }
 
-function drawRainFallChart(container, data, dates){
+function drawRainFallChart(containerIndex, data, dates){
+
+    var container = "rainGauge"+containerIndex;
 
     clearContainer(container);
 
     Highcharts.chart(container, {
         title: {
-            text: 'AVADI',
+            text: rainGaugesSites[containerIndex],
             x: -20 //center
         },
-        subtitle: {
+        /*subtitle: {
             text: 'Date: 17-Nov-2016',
             x: -20
-        },
+        },*/
         xAxis: {
             categories: dates
         },
@@ -311,7 +313,7 @@ function drawInflowChart(containerIndex, data){
             min: 0,
             max: 100,
             title: {
-                text: 'Flowmeter 1'
+                text: 'Flowmeter '+ (containerIndex+1)
             }
         },
 
@@ -356,7 +358,7 @@ function drawInflowChart(containerIndex, data){
         }
 
         // RPM
-        if (chartRpm) {
+       /* if (chartRpm) {
             point = chartRpm.series[0].points[0];
             inc = Math.random() - 0.5;
             newVal = point.y + inc;
@@ -366,7 +368,7 @@ function drawInflowChart(containerIndex, data){
             }
 
             point.update(newVal);
-        }
+        }*/
     }, 2000);
 }
 
